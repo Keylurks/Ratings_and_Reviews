@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Komyut - User Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-success mb-4 shadow-sm">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1"><i class="fas fa-bus-alt me-2"></i>Komyut Feed</span>
+        <div class="d-flex">
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button class="btn btn-sm btn-outline-light">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0"><i class="fas fa-user-tie me-2"></i>Driver Reviews</h5>
+                </div>
+                <div class="card-body overflow-auto" style="max-height: 500px;">
+                    <div th:each="review : ${driverReviews}" class="border-bottom pb-2 mb-2">
+                        <strong class="text-primary" th:text="${review.driver.name}"></strong>
+                        <div class="small text-warning">
+                            <i th:each="i : ${#numbers.sequence(1, review.rating)}" class="fas fa-star"></i>
+                        </div>
+                        <p class="small text-muted mb-1" th:text="${review.comment}"></p>
+                        <small class="text-secondary" style="font-size: 0.75rem;">by <span th:text="${review.reviewerName}"></span></small>
+                    </div>
+                    <div th:if="${driverReviews.empty}" class="text-center text-muted mt-3">No reviews yet.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="m-0"><i class="fas fa-route me-2"></i>Route Reviews</h5>
+                </div>
+                <div class="card-body overflow-auto" style="max-height: 500px;">
+                    <div th:each="review : ${routeReviews}" class="border-bottom pb-2 mb-2">
+                        <strong class="text-danger" th:text="${review.route.name}"></strong>
+                        <div class="small text-warning">
+                            <i th:each="i : ${#numbers.sequence(1, review.rating)}" class="fas fa-star"></i>
+                        </div>
+                        <p class="small text-muted mb-1" th:text="${review.comment}"></p>
+                        <small class="text-secondary" style="font-size: 0.75rem;">by <span th:text="${review.reviewerName}"></span></small>
+                    </div>
+                    <div th:if="${routeReviews.empty}" class="text-center text-muted mt-3">No reviews yet.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="m-0"><i class="fas fa-bus me-2"></i>Vehicle Reviews</h5>
+                </div>
+                <div class="card-body overflow-auto" style="max-height: 500px;">
+                    <div th:each="review : ${vehicleReviews}" class="border-bottom pb-2 mb-2">
+                        <strong class="text-dark" th:text="${review.vehicle.type} + ' (' + ${review.vehicle.plateNumber} + ')'"></strong>
+                        <div class="small text-warning"> 
+                            <i th:each="i : ${#numbers.sequence(1, review.rating)}" class="fas fa-star"></i>
+                        </div>
+                        <p class="small text-muted mb-1" th:text="${review.comment}"></p>
+                        <small class="text-secondary" style="font-size: 0.75rem;">by <span th:text="${review.reviewerName}"></span></small>
+                    </div>
+                    <div th:if="${vehicleReviews.empty}" class="text-center text-muted mt-3">No reviews yet.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-4 mb-5">
+        <a href="/rate" class="btn btn-lg btn-success rounded-pill px-5 shadow"><i class="fas fa-plus-circle me-2"></i>Rate a New Ride</a>
+    </div>
+</div>
+
+</body>
+</html>

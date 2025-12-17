@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login - Komyut PH</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand text-success fw-bold" href="/rate">
+                <i class="fas fa-bus-alt fa-lg me-2"></i> KOMYUT PH
+            </a>
+        </div>
+    </nav>
+
+    <div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh; padding-top: 60px;">
+        <div class="card p-4 shadow-lg border-0" style="width: 380px;">
+            
+            <div class="text-center mb-4">
+                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="fas fa-user-lock fa-2x"></i>
+                </div>
+                <h4 class="fw-bold text-dark">Staff Portal</h4>
+                <p class="text-muted small">Please sign in to access the dashboard</p>
+            </div>
+
+            <div th:if="${param.error}" class="alert alert-danger small text-center">
+                <i class="fas fa-exclamation-circle me-1"></i> Invalid Username or Password
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success small text-center">
+                <i class="fas fa-check-circle me-1"></i> You have been logged out.
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">USERNAME</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
+                        <input type="text" name="username" class="form-control border-start-0" placeholder="Enter username" required autofocus>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-secondary">PASSWORD</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-muted"></i></span>
+                        <input type="password" name="password" class="form-control border-start-0" placeholder="Enter password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm">
+                    Login <i class="fas fa-sign-in-alt ms-2"></i>
+                </button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <a href="/rate" class="text-decoration-none text-muted small">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Ratings & Reviews
+                </a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

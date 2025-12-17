@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Komyut - Rate Your Ride</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Card Hover Effect */
+        .hover-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: none;
+        }
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(27, 94, 32, 0.15) !important;
+        }
+
+        /* 1. DRIVER CARD - Dark Forest Green */
+        .card-driver .card-header {
+            background: #1b5e20; /* Deepest Green */
+            color: white;
+        }
+        .card-driver { border-top: 4px solid #1b5e20 !important; }
+
+        /* 2. ROUTE CARD - Teal/Emerald Green */
+        .card-route .card-header {
+            background: #2e7d32; /* Medium Green */
+            color: white;
+        }
+        .card-route { border-top: 4px solid #2e7d32 !important; }
+
+        /* 3. VEHICLE CARD - Soft Sage/Leaf Green */
+        .card-vehicle .card-header {
+            background: #4caf50; /* Lighter Green */
+            color: white;
+        }
+        .card-vehicle { border-top: 4px solid #4caf50 !important; }
+        
+        /* Form Controls */
+        .form-select:focus, .form-control:focus {
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 0.25rem rgba(46, 125, 50, 0.25);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand text-success fw-bold" href="#">
+            <i class="fas fa-bus-alt fa-lg me-2"></i> KOMYUT PH
+        </a>
+        <div class="d-flex">
+            <a href="/login" class="btn btn-outline-success btn-sm rounded-pill px-3">Staff Login</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="margin-top: 100px; margin-bottom: 50px;">
+    
+    <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show text-center shadow-sm border-0">
+        <i class="fas fa-check-circle me-2"></i> <strong>Success!</strong> Your reviews have been submitted.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${selectedRoute != null}" class="card mb-4 shadow-sm border-0">
+        <div class="card-body p-2">
+            <h6 class="text-success fw-bold ps-2 pt-2"><i class="fas fa-map-marked-alt me-2"></i>Map: <span th:text="${selectedRoute.name}"></span></h6>
+            <div id="map" class="rounded"></div>
+        </div>
+    </div>
+
+    <form id="ratingForm" th:action="@{/rate}" method="post">
+        
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-dark" style="letter-spacing: -1px;">How was your commute?</h2>
+            <p class="text-muted">Help us improve public transport by rating your experience below.</p>
+        </div>
+
+        <div class="card shadow-sm mb-4 hover-card card-driver">
+            <div class="card-header py-3">
+                <h5 class="m-0 fw-bold"><i class="fas fa-user-tie me-2"></i> Rate the Driver</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <div th:if="${selectedDriver != null}" class="p-3 bg-light border rounded d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Selected Driver</small>
+                            <strong th:text="${selectedDriver.name}" class="fs-5"></strong>
+                        </div>
+                        <input type="hidden" id="driverId" name="driverId" th:value="${selectedDriver.id}">
+                    </div>
+                    <select th:if="${selectedDriver == null}" id="driverId" name="driverId" class="form-select form-select-lg bg-light border-0">
+                        <option value="">Select Driver (Optional)</option>
+                        <option th:each="d : ${allDrivers}" th:value="${d.id}" th:text="${d.name}"></option>
+                    </select>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="small text-muted fw-bold mb-1">RATING</label>
+                        <select id="driverRating" name="driverRating" class="form-select">
+                            <option value="">Select Stars...</option>
+                            <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ Good</option>
+                            <option value="3">⭐⭐⭐ Average</option>
+                            <option value="2">⭐⭐ Poor</option>
+                            <option value="1">⭐ Bad</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="small text-muted fw-bold mb-1">COMMENT</label>
+                        <input type="text" name="driverComment" class="form-control" placeholder="Is the driver courteous? Safe driving?">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4 hover-card card-route">
+            <div class="card-header py-3">
+                <h5 class="m-0 fw-bold"><i class="fas fa-route me-2"></i> Rate the Route</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <div th:if="${selectedRoute != null}" class="p-3 bg-light border rounded d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Selected Route</small>
+                            <strong th:text="${selectedRoute.name}" class="fs-5"></strong>
+                        </div>
+                        <input type="hidden" id="routeId" name="routeId" th:value="${selectedRoute.id}">
+                    </div>
+                    <select th:if="${selectedRoute == null}" id="routeId" name="routeId" class="form-select form-select-lg bg-light border-0">
+                        <option value="">Select Route (Optional)</option>
+                        <option th:each="r : ${allRoutes}" th:value="${r.id}" th:text="${r.name}"></option>
+                    </select>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="small text-muted fw-bold mb-1">RATING</label>
+                        <select id="routeRating" name="routeRating" class="form-select">
+                            <option value="">Select Stars...</option>
+                            <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ Good</option>
+                            <option value="3">⭐⭐⭐ Average</option>
+                            <option value="2">⭐⭐ Poor</option>
+                            <option value="1">⭐ Bad</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="small text-muted fw-bold mb-1">COMMENT</label>
+                        <input type="text" name="routeComment" class="form-control" placeholder="Was there heavy traffic? Easy to find?">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4 hover-card card-vehicle">
+            <div class="card-header py-3">
+                <h5 class="m-0 fw-bold"><i class="fas fa-bus me-2"></i> Rate the Vehicle</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <div th:if="${selectedVehicle != null}" class="p-3 bg-light border rounded d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Selected Vehicle</small>
+                            <strong th:text="${selectedVehicle.type} + ' (' + ${selectedVehicle.plateNumber} + ')'" class="fs-5"></strong>
+                        </div>
+                        <input type="hidden" id="vehicleId" name="vehicleId" th:value="${selectedVehicle.id}">
+                    </div>
+                    <select th:if="${selectedVehicle == null}" id="vehicleId" name="vehicleId" class="form-select form-select-lg bg-light border-0">
+                        <option value="">Select Vehicle (Optional)</option>
+                        <option th:each="v : ${allVehicles}" th:value="${v.id}" th:text="${v.type} + ' (' + ${v.plateNumber} + ')'"></option>
+                    </select>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="small text-muted fw-bold mb-1">RATING</label>
+                        <select id="vehicleRating" name="vehicleRating" class="form-select">
+                            <option value="">Select Stars...</option>
+                            <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ Good</option>
+                            <option value="3">⭐⭐⭐ Average</option>
+                            <option value="2">⭐⭐ Poor</option>
+                            <option value="1">⭐ Bad</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="small text-muted fw-bold mb-1">COMMENT</label>
+                        <input type="text" name="vehicleComment" class="form-control" placeholder="Was it clean? Aircon working?">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold shadow hover-card" style="background: #1b5e20; border: none;">
+            <i class="fas fa-paper-plane me-2"></i> SUBMIT REVIEWS
+        </button>
+
+    </form>
+
+    <div class="mt-5">
+        <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+            <h4 class="mb-0 fw-bold text-dark" th:text="${historyTitle}">Recent Reviews</h4>
+            <span class="badge bg-success ms-3 rounded-pill">Live Feed</span>
+        </div>
+        
+        <div class="card shadow-sm border-0">
+            <div class="list-group list-group-flush">
+                <div th:each="review : ${historyReviews}" class="list-group-item p-4 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span th:if="${review.driver}" class="badge bg-primary me-2 mb-2">DRIVER</span>
+                            <span th:if="${review.route}" class="badge bg-success me-2 mb-2" style="background-color: #2e7d32 !important;">ROUTE</span>
+                            <span th:if="${review.vehicle}" class="badge bg-warning text-dark me-2 mb-2">VEHICLE</span>
+                            
+                            <h5 class="mb-1 fw-bold text-dark">
+                                <span th:if="${review.driver}" th:text="${review.driver.name}"></span>
+                                <span th:if="${review.route}" th:text="${review.route.name}"></span>
+                                <span th:if="${review.vehicle}" th:text="${review.vehicle.type} + ' - ' + ${review.vehicle.plateNumber}"></span>
+                            </h5>
+
+                            <div class="text-warning mb-2">
+                                <i th:each="i : ${#numbers.sequence(1, review.rating)}" class="fas fa-star"></i>
+                                <span class="text-muted small ms-2" th:text="'(' + ${review.rating} + '/5)'"></span>
+                            </div>
+                            
+                            <p class="mb-0 text-secondary" th:text="${review.comment}"></p>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block fw-bold" th:text="${review.reviewerName}"></small>
+                            <small class="text-muted" th:text="${#temporals.format(review.timestamp, 'MMM dd, HH:mm')}"></small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div th:if="${historyReviews.empty}" class="p-5 text-center text-muted">
+                    <i class="fas fa-comments fa-3x mb-3 text-light-success"></i><br>
+                    <h5 class="fw-normal">No reviews yet.</h5>
+                    <p class="small">Be the first to share your experience!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:if="${selectedRoute != null}" th:inline="javascript">
+    var map = L.map('map').setView([14.5995, 120.9842], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var routeCoords = JSON.parse(/*[[${selectedRoute.mapCoordinates}]]*/ '[]');
+    if(routeCoords.length > 0) {
+        var polyline = L.polyline(routeCoords, {color: '#1b5e20', weight: 5}).addTo(map); // Green Line
+        map.fitBounds(polyline.getBounds());
+    }
+</script>
+
+<script>
+    document.getElementById('ratingForm').addEventListener('submit', function(event) {
+        function validateSection(idName, ratingName, sectionTitle) {
+            var idEl = document.getElementById(idName);
+            var rateEl = document.getElementById(ratingName);
+            if (idEl && idEl.value !== "" && rateEl.value === "") {
+                alert("Please select a Star Rating for the " + sectionTitle + ".");
+                return false;
+            }
+            return true;
+        }
+
+        var validDriver = validateSection('driverId', 'driverRating', 'Driver');
+        if (!validDriver) { event.preventDefault(); return; }
+
+        var validRoute = validateSection('routeId', 'routeRating', 'Route');
+        if (!validRoute) { event.preventDefault(); return; }
+
+        var validVehicle = validateSection('vehicleId', 'vehicleRating', 'Vehicle');
+        if (!validVehicle) { event.preventDefault(); return; }
+
+        var dVal = document.getElementById('driverId') ? document.getElementById('driverId').value : "";
+        var rVal = document.getElementById('routeId') ? document.getElementById('routeId').value : "";
+        var vVal = document.getElementById('vehicleId') ? document.getElementById('vehicleId').value : "";
+
+        if (dVal === "" && rVal === "" && vVal === "") {
+            alert("Please select at least one Driver, Route, or Vehicle to review.");
+            event.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>
