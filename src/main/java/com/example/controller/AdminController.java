@@ -111,7 +111,7 @@ public class AdminController {
 
     @GetMapping("/qr")
     public void generateQRCode(@RequestParam String type, @RequestParam Long id, HttpServletResponse response) throws Exception {
-        String baseUrl = "http://localhost:8080/rate?"; 
+        String baseUrl = "https://ratings-and-reviews-3m04.onrender.com"; 
         String data = "";
         if(type.equals("driver")) data = baseUrl + "driverId=" + id;
         if(type.equals("route")) data = baseUrl + "routeId=" + id;
@@ -125,4 +125,5 @@ public class AdminController {
         MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
         outputStream.flush();
     }
+
 }
